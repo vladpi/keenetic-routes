@@ -1,0 +1,32 @@
+# Env and secrets
+.env
+.env.local
+*.pem
+
+# User configuration
+.keenetic-routes-config.yaml
+
+# Binary and build
+/bin/
+*.exe
+
+# Go
+/vendor/
+*.test
+coverage.out
+*.cover
+*.prof
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Input / output files
+*.yaml
