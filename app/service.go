@@ -109,6 +109,37 @@ func (s *Service) Upload(file string, cfg *config.Config) error {
 	return nil
 }
 
+// ResolveDomains resolves route group domains and merges IPv4 results into hosts.
+func (s *Service) ResolveDomains(file string) error {
+	if file == "" {
+		return fmt.Errorf("file path is required")
+	}
+	if _, err := os.Stat(file); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("routes file not found: %s", file)
+		}
+		return fmt.Errorf("stat routes file: %w", err)
+	}
+
+	rf, err := routes.LoadYAML(file)
+	if err != nil {
+		return fmt.Errorf("load YAML: %w", err)
+	}
+	summary, err := routes.ResolveDomains(rf)
+	if err != nil {
+		return err
+	}
+	if summary.Groups == 0 {
+		fmt.Fprintln(s.out, "No domains to resolve.")
+		return nil
+	}
+	if err := routes.SaveYAML(file, rf); err != nil {
+		return fmt.Errorf("save YAML: %w", err)
+	}
+	fmt.Fprintf(s.out, "Resolved %d domains in %d groups, added %d IPs.\n", summary.Domains, summary.Groups, summary.IPsAdded)
+	return nil
+}
+
 // Backup downloads routes and saves them to a YAML file.
 func (s *Service) Backup(output string, cfg *config.Config) error {
 	if output == "" {

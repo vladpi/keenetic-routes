@@ -50,6 +50,16 @@ func main() {
 		},
 	}
 
+	var resolveDomainsCmd = &cobra.Command{
+		Use:   "resolve-domains",
+		Short: "Resolve domains and update hosts",
+		Long:  "Resolve domain entries in route groups and merge IPv4 results into hosts.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			file, _ := cmd.Flags().GetString("file")
+			return service.ResolveDomains(file)
+		},
+	}
+
 	var backupCmd = &cobra.Command{
 		Use:   "backup",
 		Short: "Backup current static routes to a file",
@@ -100,13 +110,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	resolveDomainsCmd.Flags().StringP("file", "f", "", "path to YAML routes file (required)")
+	if err := markRequired(resolveDomainsCmd, "file"); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
 	backupCmd.Flags().StringP("output", "o", "", "output YAML file path (required)")
 	if err := markRequired(backupCmd, "output"); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
-	rootCmd.AddCommand(uploadCmd, backupCmd, clearCmd, configCmd)
+	rootCmd.AddCommand(uploadCmd, resolveDomainsCmd, backupCmd, clearCmd, configCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

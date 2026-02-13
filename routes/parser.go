@@ -20,7 +20,7 @@ type Route struct {
 	Reject    bool
 }
 
-// RouteGroup is a YAML group: shared params and list of hosts.
+// RouteGroup is a YAML group: shared params, hosts, and domains.
 type RouteGroup struct {
 	Comment   string   `yaml:"comment,omitempty"`
 	Gateway   string   `yaml:"gateway,omitempty"`
@@ -28,6 +28,7 @@ type RouteGroup struct {
 	Auto      bool     `yaml:"auto,omitempty"`
 	Reject    bool     `yaml:"reject,omitempty"`
 	Hosts     []string `yaml:"hosts"`
+	Domains   []string `yaml:"domains,omitempty"`
 }
 
 // RoutesFile is the root YAML structure.
