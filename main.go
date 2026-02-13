@@ -18,7 +18,7 @@ func main() {
 		Use:     "keenetic-routes",
 		Short:   "Manage Keenetic static routes via RCI API",
 		Long:    "Upload, backup, and clear static routes on Keenetic routers using the NDMS RCI interface.",
-		Version: "1.0.0",
+		Version: "1.1.0",
 	}
 
 	rootCmd.PersistentFlags().StringVar(&hostFlag, "host", "", "Keenetic router host (e.g., 192.168.100.1:280)")
