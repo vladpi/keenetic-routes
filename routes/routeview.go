@@ -21,11 +21,11 @@ type RouteView interface {
 	RejectValue() bool
 }
 
-// RouteDest extracts destination from a route: "host" (IPv4 or CIDR), or "network"/"ip" + "mask"/"prefix".
-// Returns empty string if the destination is missing or not IPv4.
+// RouteDest extracts destination from a route: "host" (IP or CIDR), or "network"/"ip" + "mask"/"prefix".
+// Returns empty string if the destination is missing or invalid.
 func RouteDest(r RouteView) string {
 	if h := r.HostValue(); h != "" {
-		if !isIPv4OrCIDR(h) {
+		if !isIPOrCIDR(h) {
 			return ""
 		}
 		return h
@@ -37,13 +37,19 @@ func RouteDest(r RouteView) string {
 	if network == "" {
 		return ""
 	}
-	if net.ParseIP(network).To4() == nil {
+	networkIP := net.ParseIP(network)
+	if networkIP == nil {
 		return ""
 	}
-	if prefix := r.PrefixValue(); prefix > 0 && prefix <= 32 {
+	network = networkIP.String()
+	maxPrefix := 128
+	if networkIP.To4() != nil {
+		maxPrefix = 32
+	}
+	if prefix := r.PrefixValue(); prefix > 0 && prefix <= maxPrefix {
 		return fmt.Sprintf("%s/%d", network, prefix)
 	}
-	if prefix := r.PrefixLenValue(); prefix > 0 && prefix <= 32 {
+	if prefix := r.PrefixLenValue(); prefix > 0 && prefix <= maxPrefix {
 		return fmt.Sprintf("%s/%d", network, prefix)
 	}
 	maskStr := r.MaskValue()
@@ -61,17 +67,14 @@ func RouteDest(r RouteView) string {
 	return fmt.Sprintf("%s/%d", network, ones)
 }
 
-func isIPv4OrCIDR(s string) bool {
+func isIPOrCIDR(s string) bool {
 	if strings.Contains(s, "/") {
 		ip, _, err := net.ParseCIDR(s)
 		if err != nil {
 			return false
 		}
-		return ip.To4() != nil
+		return ip != nil
 	}
 	ip := net.ParseIP(s)
-	if ip == nil {
-		return false
-	}
-	return ip.To4() != nil
+	return ip != nil
 }

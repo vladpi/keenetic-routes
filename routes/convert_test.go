@@ -46,6 +46,11 @@ func TestRouteDestAndToYAML(t *testing.T) {
 		host:    "2001:db8::1",
 		comment: "ipv6",
 	}
+	r4 := stubRoute{
+		network:   "2001:db8::",
+		prefixLen: 32,
+		comment:   "ipv6-cidr",
+	}
 
 	if got := RouteDest(r1); got != "8.8.8.8" {
 		t.Fatalf("RouteDest host: got %q", got)
@@ -53,14 +58,17 @@ func TestRouteDestAndToYAML(t *testing.T) {
 	if got := RouteDest(r2); got != "192.168.0.0/24" {
 		t.Fatalf("RouteDest network: got %q", got)
 	}
-	if got := RouteDest(r3); got != "" {
+	if got := RouteDest(r3); got != "2001:db8::1" {
 		t.Fatalf("RouteDest ipv6: got %q", got)
+	}
+	if got := RouteDest(r4); got != "2001:db8::/32" {
+		t.Fatalf("RouteDest ipv6 cidr: got %q", got)
 	}
 
 	rf := ToYAML([]Route{
 		{Host: "8.8.8.8", Comment: "test", Gateway: "10.0.0.1", Auto: true},
 		{Host: "192.168.0.0/24", Comment: "test", Gateway: "10.0.0.1", Auto: true},
-		{Host: "2001:db8::1", Comment: "ipv6"},
+		{Host: "2001:db8::/32", Comment: "test", Gateway: "10.0.0.1", Auto: true},
 	})
 	if rf == nil || len(rf.Routes) != 1 {
 		t.Fatalf("expected 1 group, got %+v", rf)
@@ -69,7 +77,7 @@ func TestRouteDestAndToYAML(t *testing.T) {
 	if group.Comment != "test" || group.Gateway != "10.0.0.1" || !group.Auto {
 		t.Fatalf("unexpected group metadata: %+v", group)
 	}
-	if len(group.Hosts) != 2 {
-		t.Fatalf("expected 2 hosts, got %d", len(group.Hosts))
+	if len(group.Hosts) != 3 {
+		t.Fatalf("expected 3 hosts, got %d", len(group.Hosts))
 	}
 }

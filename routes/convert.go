@@ -15,7 +15,7 @@ func ToYAML(routesList []Route) *RoutesFile {
 	var order []routeGroupKey
 
 	for _, r := range routesList {
-		if r.Host == "" || !isIPv4OrCIDR(r.Host) {
+		if r.Host == "" || !isIPOrCIDR(r.Host) {
 			continue
 		}
 		k := routeGroupKey{

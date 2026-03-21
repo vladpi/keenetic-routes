@@ -196,6 +196,11 @@ func boolPtr(v bool) *bool {
 	return &v
 }
 
+func intishPtr(v int) *Intish {
+	i := Intish(v)
+	return &i
+}
+
 func stringValue(v *Stringish) string {
 	if v == nil {
 		return ""
@@ -222,7 +227,7 @@ func toDomainRoutes(raw []Route) ([]routes.Route, error) {
 	for _, r := range raw {
 		dest := routes.RouteDest(r)
 		if dest == "" {
-			return nil, fmt.Errorf("unsupported route destination (IPv4 only): host=%q network=%q ip=%q", r.HostValue(), r.NetworkValue(), r.IPValue())
+			return nil, fmt.Errorf("unsupported route destination: host=%q network=%q ip=%q", r.HostValue(), r.NetworkValue(), r.IPValue())
 		}
 		out = append(out, routes.Route{
 			Host:      dest,
@@ -304,12 +309,17 @@ func buildRoute(e routes.Route) (Route, error) {
 		Comment: stringishPtr(e.Comment),
 	}
 	if strings.Contains(e.Host, "/") {
-		_, ipNet, err := net.ParseCIDR(e.Host)
+		ip, ipNet, err := net.ParseCIDR(e.Host)
 		if err != nil {
 			return Route{}, fmt.Errorf("invalid CIDR %q: %w", e.Host, err)
 		}
 		route.Network = stringishPtr(ipNet.IP.String())
-		route.Mask = stringishPtr(net.IP(ipNet.Mask).String())
+		if ip.To4() != nil {
+			route.Mask = stringishPtr(net.IP(ipNet.Mask).String())
+		} else {
+			ones, _ := ipNet.Mask.Size()
+			route.PrefixLen = intishPtr(ones)
+		}
 	} else {
 		route.Host = stringishPtr(e.Host)
 	}

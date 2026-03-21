@@ -36,28 +36,22 @@ type RoutesFile struct {
 	Routes []RouteGroup `yaml:"routes"`
 }
 
-// normalizeHost validates and normalizes "IP" or "IP/CIDR" to a string form suitable for Keenetic host field.
+// normalizeHost validates and normalizes an IP address or CIDR.
 func normalizeHost(s string) (string, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return "", fmt.Errorf("empty host")
 	}
 	if strings.Contains(s, "/") {
-		ip, n, err := net.ParseCIDR(s)
+		_, n, err := net.ParseCIDR(s)
 		if err != nil {
 			return "", err
-		}
-		if ip.To4() == nil {
-			return "", fmt.Errorf("invalid IPv4 CIDR")
 		}
 		return n.String(), nil
 	}
 	ip := net.ParseIP(s)
 	if ip == nil {
 		return "", fmt.Errorf("invalid IP")
-	}
-	if ip.To4() == nil {
-		return "", fmt.Errorf("invalid IPv4")
 	}
 	return ip.String(), nil
 }
